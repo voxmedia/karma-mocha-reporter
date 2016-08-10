@@ -348,9 +348,10 @@ var MochaReporter = function (baseReporterDecorator, formatError, config) {
                     item.log = item.log || [];
 
                     // print diff
-                    if (config.mochaReporter.showDiff && item.assertionErrors && item.assertionErrors[0]) {
-                        var expected = item.assertionErrors[0].expected;
-                        var actual = item.assertionErrors[0].actual;
+                    var assertionError = item.assertionErrors && item.assertionErrors[0];
+                    if (config.mochaReporter.showDiff && assertionError && assertionError.expected && assertionError.actual) {
+                        var expected = assertionError.expected;
+                        var actual = assertionError.actual;
                         var utils = mocha.utils;
                         var err = {
                             actual: actual,
