@@ -2,6 +2,7 @@
 
 var chalk = require('chalk');
 var symbols = require('./symbols');
+var mochaClean = require('mocha-clean');
 
 /**
  * The MochaReporter.
@@ -348,12 +349,6 @@ var MochaReporter = function (baseReporterDecorator, formatError, config) {
 
                     // print diff
                     if (config.mochaReporter.showDiff && item.assertionErrors && item.assertionErrors[0]) {
-                        var log = item.log[0].split('\n');
-                        var errorMessage = log.splice(0, 1)[0];
-
-                        // print error message before diff
-                        line += colors.error.print(repeatString('  ', depth) + errorMessage + '\n');
-
                         var expected = item.assertionErrors[0].expected;
                         var actual = item.assertionErrors[0].actual;
                         var utils = mocha.utils;
@@ -378,17 +373,16 @@ var MochaReporter = function (baseReporterDecorator, formatError, config) {
                         // create diff
                         var diff = config.mochaReporter.showDiff === 'inline' ? inlineDiff(err, repeatString('  ', depth)) : unifiedDiff(err, repeatString('  ', depth));
 
-                        line += diff + '\n';
-
-                        // print formatted stack trace after diff
-                        log.forEach(function (err) {
-                            line += colors.error.print(formatError(err));
-                        });
-                    } else {
-                        item.log.forEach(function (err) {
-                            line += colors.error.print(formatError(err, repeatString('  ', depth)));
-                        });
+                        line += diff + '\n\n';
                     }
+
+                    // print formatted and cleaned stack trace
+                    item.log.forEach(function (error) {
+                        var stackObject = { stack: error };
+                        var cleanedError = mochaClean.cleanError(stackObject);
+                        var indentedError = formatError(cleanedError.stack, repeatString('  ', depth));
+                        line += colors.error.print(indentedError);
+                    });
                 }
 
                 // use write method of baseReporter
