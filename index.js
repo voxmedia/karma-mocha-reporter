@@ -96,9 +96,7 @@ var MochaReporter = function (baseReporterDecorator, formatError, config) {
      * @param {Error} err with actual/expected
      * @return {string} The diff.
      */
-    function unifiedDiff (err) {
-        var indent = '      ';
-
+    function unifiedDiff (err, indent) {
         function cleanUp (line) {
             if (line[0] === '+') {
                 return indent + colors.success.print(line);
@@ -116,12 +114,12 @@ var MochaReporter = function (baseReporterDecorator, formatError, config) {
         }
 
         function notBlank (line) {
-            return line !== null;
+            return line != null && /\S/.test(line);
         }
 
         var msg = diff.createPatch('string', err.actual, err.expected);
         var lines = msg.split('\n').splice(4);
-        return '\n      ' +
+        return '\n' + indent +
             colors.success.print('+ expected') + ' ' +
             colors.error.print('- actual') +
             '\n\n' +
@@ -167,7 +165,7 @@ var MochaReporter = function (baseReporterDecorator, formatError, config) {
      * @param {Error} err with actual/expected
      * @return {string} Diff
      */
-    function inlineDiff (err) {
+    function inlineDiff (err, indent) {
         var msg = errorDiff(err, 'WordsWithSpace');
 
         // linenos
@@ -189,7 +187,7 @@ var MochaReporter = function (baseReporterDecorator, formatError, config) {
             '\n';
 
         // indent
-        msg = msg.replace(/^/gm, '      ');
+        msg = msg.replace(/^/gm, indent);
         return msg;
     }
 
@@ -378,7 +376,7 @@ var MochaReporter = function (baseReporterDecorator, formatError, config) {
                         }
 
                         // create diff
-                        var diff = config.mochaReporter.showDiff === 'inline' ? inlineDiff(err) : unifiedDiff(err);
+                        var diff = config.mochaReporter.showDiff === 'inline' ? inlineDiff(err, repeatString('  ', depth)) : unifiedDiff(err, repeatString('  ', depth));
 
                         line += diff + '\n';
 
